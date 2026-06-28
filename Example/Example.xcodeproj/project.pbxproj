@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BC9D537C2FE6142300FE3864 /* MyLibrary in Frameworks */ = {isa = PBXBuildFile; productRef = BC9D537B2FE6142300FE3864 /* MyLibrary */; };
+		02037BB32FF047CD005C6167 /* Musa in Frameworks */ = {isa = PBXBuildFile; productRef = 02037BB22FF047CD005C6167 /* Musa */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BC9D537C2FE6142300FE3864 /* MyLibrary in Frameworks */,
+				02037BB32FF047CD005C6167 /* Musa in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +70,7 @@
 			);
 			name = Example;
 			packageProductDependencies = (
-				BC9D537B2FE6142300FE3864 /* MyLibrary */,
+				02037BB22FF047CD005C6167 /* Musa */,
 			);
 			productName = Example;
 			productReference = BC9D536C2FE6140000FE3864 /* Example.app */;
@@ -101,7 +101,7 @@
 			mainGroup = BC9D53632FE6140000FE3864;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				BC9D537A2FE6142300FE3864 /* XCLocalSwiftPackageReference "../Musa" */,
+				02037BB12FF047CD005C6167 /* XCLocalSwiftPackageReference "../Musa" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = BC9D536D2FE6140000FE3864 /* Products */;
@@ -349,16 +349,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		BC9D537A2FE6142300FE3864 /* XCLocalSwiftPackageReference "../Musa" */ = {
+		02037BB12FF047CD005C6167 /* XCLocalSwiftPackageReference "../Musa" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../Musa;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		BC9D537B2FE6142300FE3864 /* MyLibrary */ = {
+		02037BB22FF047CD005C6167 /* Musa */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = MyLibrary;
+			productName = Musa;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

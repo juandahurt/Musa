@@ -1,21 +1,19 @@
-//
-//  ContentView.swift
-//  Example
-//
-//  Created by apolo on 19/06/26.
-//
-
+import Musa
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        CanvasWrapper()
+    }
+}
+
+struct CanvasWrapper: UIViewRepresentable {
+    func makeUIView(context: Context) -> some UIView {
+        CanvasView()
+    }
+    
+    func updateUIView(_ uiView: UIViewType, context: Context) {
+        
     }
 }
 
