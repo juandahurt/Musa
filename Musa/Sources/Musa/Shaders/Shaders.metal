@@ -1,0 +1,21 @@
+#include <metal_stdlib>
+
+using namespace metal;
+
+struct vertex_input {
+    float4 position [[attribute(0)]];
+};
+
+struct fragment_input {
+    float4 position [[position]];
+};
+
+vertex fragment_input vertex_shader(vertex_input input [[stage_in]]) {
+    return fragment_input {
+        .position = input.position
+    };
+}
+
+fragment half4 fragment_shader(fragment_input input [[stage_in]]) {
+    return half4(1, 0.6, 1, 1);
+}
