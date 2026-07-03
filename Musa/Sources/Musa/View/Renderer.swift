@@ -1,17 +1,26 @@
 import MetalKit
 import QuartzCore
 
-class Renderer: NSObject, CALayerDelegate {
+struct Touch {
+    var position: CGPoint
+}
+
+class Renderer {
     let device: MTLDevice
     let commandQueue: MTLCommandQueue?
     
     var pipeline: MTLRenderPipelineState?
+   
+    var touches: [Touch] = []
     
     init(device: MTLDevice) {
         self.device = device
         self.commandQueue = device.makeCommandQueue()
-        super.init()
         load()
+    }
+    
+    func pushTouch(_ touch: Touch) {
+        touches.append(touch)
     }
     
     func load() {
@@ -36,9 +45,9 @@ class Renderer: NSObject, CALayerDelegate {
         }
     }
     
-    func display(_ layer: CALayer) {
-        guard let metalLayer = layer as? CAMetalLayer else { return }
-        guard let drawable = metalLayer.nextDrawable() else { return }
+    func display(_ layer: CAMetalLayer) {
+        print("display")
+        guard let drawable = layer.nextDrawable() else { return }
         guard let pipeline else { return }
         
         let commandBuffer = commandQueue?.makeCommandBuffer()
@@ -48,20 +57,50 @@ class Renderer: NSObject, CALayerDelegate {
         descriptor.colorAttachments[0].texture = drawable.texture
         descriptor.colorAttachments[0].loadAction = .clear
         
-        let vertices: [SIMD4<Float>] = [
-            [-1, -1, 0, 1],
-             [0, -1, 0, 1],
-             [0,  0, 0, 1]
-        ]
-        let vertexBuffer = device.makeBuffer(
-            bytes: vertices,
-            length: MemoryLayout<SIMD4<Float>>.stride * vertices.count
-        )
-        
         let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
-        encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-        encoder?.setRenderPipelineState(pipeline)
-        encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        
+        for touch in touches {
+            let vertices: [SIMD4<Float>] = [
+                [-1, -1, 0, 1],
+                [0, -1, 0, 1],
+                [0,  0, 0, 1]
+            ]
+            let vertexBuffer = device.makeBuffer(
+                bytes: vertices,
+                length: MemoryLayout<SIMD4<Float>>.stride * vertices.count
+            )
+            encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+            
+            var modelMatrix = CGAffineTransform
+                .identity
+                .translatedBy(x: touch.position.x, y: touch.position.y)
+                .simd
+            encoder?.setVertexBytes(
+                &modelMatrix,
+                length: MemoryLayout<simd_float4x4>.stride,
+                index: 1
+            )
+            
+            let rect = CGRect(
+                x: 0,
+                y: 0,
+                width: layer.bounds.width,
+                height: layer.bounds.height
+            )
+            var projectionMatrix = float4x4(
+                ortho: rect,
+                near: 0,
+                far: 1
+            )
+            encoder?.setVertexBytes(
+                &projectionMatrix,
+                length: MemoryLayout<simd_float4x4>.stride,
+                index: 2
+            )
+            
+            encoder?.setRenderPipelineState(pipeline)
+            encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+        }
         
         encoder?.endEncoding()
         

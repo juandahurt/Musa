@@ -10,9 +10,9 @@ struct fragment_input {
     float4 position [[position]];
 };
 
-vertex fragment_input vertex_shader(vertex_input input [[stage_in]]) {
+vertex fragment_input vertex_shader(vertex_input input [[stage_in]], constant float4x4& model_matrix [[buffer(1)]], constant float4x4& projection_matrix [[buffer(2)]]) {
     return fragment_input {
-        .position = input.position
+        .position = projection_matrix * model_matrix * input.position
     };
 }
 
