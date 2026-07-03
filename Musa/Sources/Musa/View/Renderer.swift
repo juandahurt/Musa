@@ -56,14 +56,25 @@ class Renderer {
         descriptor.colorAttachments[0].clearColor = .init(red: 0.2, green: 0.3, blue: 0.5, alpha: 1)
         descriptor.colorAttachments[0].texture = drawable.texture
         descriptor.colorAttachments[0].loadAction = .clear
+        descriptor.colorAttachments[0].storeAction = .store
         
         let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
         
+        let indices: [UInt16] = [
+            0, 1, 2,
+            0, 2, 3
+        ]
+        let indexBuffer = device.makeBuffer(
+            bytes: indices,
+            length: MemoryLayout<Float16>.stride * indices.count
+        )
+        
         for touch in touches {
             let vertices: [SIMD4<Float>] = [
+                [1,  1, 0, 1],
+                [1, -1, 0, 1],
                 [-1, -1, 0, 1],
-                [0, -1, 0, 1],
-                [0,  0, 0, 1]
+                [-1,  1, 0, 1],
             ]
             let vertexBuffer = device.makeBuffer(
                 bytes: vertices,
@@ -74,6 +85,7 @@ class Renderer {
             var modelMatrix = CGAffineTransform
                 .identity
                 .translatedBy(x: touch.position.x, y: touch.position.y)
+                .scaledBy(x: 4, y: 4)
                 .simd
             encoder?.setVertexBytes(
                 &modelMatrix,
@@ -99,7 +111,13 @@ class Renderer {
             )
             
             encoder?.setRenderPipelineState(pipeline)
-            encoder?.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: 3)
+            encoder?.drawIndexedPrimitives(
+                type: .triangle,
+                indexCount: indices.count,
+                indexType: .uint16,
+                indexBuffer: indexBuffer!,
+                indexBufferOffset: 0
+            )
         }
         
         encoder?.endEncoding()
