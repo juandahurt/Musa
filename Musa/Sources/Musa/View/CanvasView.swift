@@ -29,11 +29,15 @@ public class CanvasView: UIView {
         
         metalLayer.device = device
         metalLayer.pixelFormat = .rgba8Unorm
-        metalLayer.delegate = renderer
         metalLayer.needsDisplayOnBoundsChange = true
     }
     
     required init?(coder: NSCoder) {
         fatalError("unreachable code!")
+    }
+    
+    public override func layoutSubviews() {
+        // TODO: update the transforms
+        renderer.display(metalLayer)
     }
 }
