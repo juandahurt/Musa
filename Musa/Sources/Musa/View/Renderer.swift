@@ -63,8 +63,21 @@ class Renderer {
         let textureDescriptor = MTLTextureDescriptor()
         textureDescriptor.width = Int(canvasSize.width)
         textureDescriptor.height = Int(canvasSize.height)
-        textureDescriptor.usage = [.renderTarget]
+        textureDescriptor.usage = [.renderTarget, .shaderRead]
         canvasTexture = device.makeTexture(descriptor: textureDescriptor)
+        
+        fillCanvasTexture()
+    }
+    
+    func fillCanvasTexture() {
+        let commandBuffer = commandQueue?.makeCommandBuffer()
+        let renderDescriptor = MTLRenderPassDescriptor()
+        renderDescriptor.colorAttachments[0].texture = canvasTexture
+        renderDescriptor.colorAttachments[0].loadAction = .clear
+        renderDescriptor.colorAttachments[0].clearColor = .init(red: 1, green: 1, blue: 1, alpha: 1)
+        let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderDescriptor)
+        encoder?.endEncoding()
+        commandBuffer?.commit()
     }
     
     func display(_ layer: CAMetalLayer) {
@@ -132,6 +145,8 @@ class Renderer {
             length: MemoryLayout<simd_float4x4>.stride,
             index: 2
         )
+        
+        encoder?.setFragmentTexture(canvasTexture, index: 0)
         
         encoder?.setRenderPipelineState(pipeline)
         encoder?.drawIndexedPrimitives(
