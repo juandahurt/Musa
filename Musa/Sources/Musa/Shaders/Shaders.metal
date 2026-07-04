@@ -4,6 +4,7 @@ using namespace metal;
 
 struct vertex_input {
     float4 position [[attribute(0)]];
+    float2 uv [[attribute(1)]];
 };
 
 struct fragment_input {
@@ -17,5 +18,5 @@ vertex fragment_input vertex_shader(vertex_input input [[stage_in]], constant fl
 }
 
 fragment half4 fragment_shader(fragment_input input [[stage_in]]) {
-    return half4(1, 0.6, 1, 1);
+    return half4(1, 1, 1, 1);
 }
