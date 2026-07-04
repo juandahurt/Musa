@@ -1,5 +1,5 @@
 public enum FeatureFlag: String, CaseIterable {
-    case test = "Test Flag"
+    case coalescedTouches = "Use coealesced touches"
 }
 
 public class FeatureFlagsManager {
@@ -9,7 +9,7 @@ public class FeatureFlagsManager {
     var features: [FeatureFlag: Bool] = [:]
     
     init() {
-        set(.test, value: false)
+        set(.coalescedTouches, value: false)
     }
     
     public func set(_ featureFlag: FeatureFlag, value: Bool) {
