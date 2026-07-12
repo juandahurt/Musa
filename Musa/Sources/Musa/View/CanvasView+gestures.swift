@@ -20,6 +20,8 @@ extension CanvasView {
     // MARK: Translation
     @objc
     func onPan(_ panGestureRecognizer: UIPanGestureRecognizer) {
+        guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
+        
         let translation = panGestureRecognizer.translation(in: self)
         renderer.moveCamera(by: translation)
         panGestureRecognizer.setTranslation(.zero, in: self)
@@ -28,6 +30,8 @@ extension CanvasView {
     // MARK: Zoom
     @objc
     func onPinch(_ pinchGestureRecognizer: UIPinchGestureRecognizer) {
+        guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
+        
         let location = pinchGestureRecognizer.location(in: self)
         renderer.zoom(by: pinchGestureRecognizer.scale, around: location)
         pinchGestureRecognizer.scale = 1
@@ -36,6 +40,8 @@ extension CanvasView {
     // MARK: Rotation
     @objc
     func onRotation(_ rotationGestureRecognizer: UIRotationGestureRecognizer) {
+        guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
+        
         let location = rotationGestureRecognizer.location(in: self)
         renderer.rotate(by: rotationGestureRecognizer.rotation, around: location)
         rotationGestureRecognizer.rotation = 0
