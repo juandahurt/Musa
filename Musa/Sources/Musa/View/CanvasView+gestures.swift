@@ -24,15 +24,9 @@ extension CanvasView {
     // MARK: Zoom
     @objc
     func onPinch(_ pinchGestureRecognizer: UIPinchGestureRecognizer) {
-        let scale = pinchGestureRecognizer.scale
-        renderer.scaleCamera(by: scale)
+        let location = pinchGestureRecognizer.location(in: self)
+        renderer.zoom(by: pinchGestureRecognizer.scale, around: location)
         pinchGestureRecognizer.scale = 1
-        let pivot = pinchGestureRecognizer.location(in: self)
-        renderer.pivotCamera(to: pivot)
-        
-        if pinchGestureRecognizer.state == .ended {
-            renderer.pivotCamera(to: .zero)
-        }
     }
 }
 

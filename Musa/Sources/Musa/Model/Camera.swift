@@ -18,9 +18,7 @@ extension Camera {
     var viewMatrix: simd_float4x4 {
         CGAffineTransform.identity
             .translatedBy(x: translation.x, y: translation.y)
-            .translatedBy(x: pivot.x, y: pivot.y)
             .scaledBy(x: scale, y: scale)
-            .translatedBy(x: -pivot.x, y: -pivot.y)
             .simd
     }
 }

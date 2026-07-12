@@ -36,12 +36,18 @@ class Renderer {
         camera.translation.y += point.y
     }
     
-    func scaleCamera(by scale: CGFloat) {
+    func zoom(by scale: CGFloat, around screenPoint: CGPoint) {
+        guard let layer else { return }
+        let vw = layer.bounds.width
+        let vh = layer.bounds.height
+
+        // to world coordinates
+        let fx = CGFloat(camera.center.x) - vw / 2 + screenPoint.x
+        let fy = CGFloat(camera.center.y) - vh / 2 + screenPoint.y
+
+        camera.translation.x = scale * camera.translation.x + (1 - scale) * fx
+        camera.translation.y = scale * camera.translation.y + (1 - scale) * fy
         camera.scale *= scale
-    }
-    
-    func pivotCamera(to pivot: CGPoint) {
-        camera.pivot = pivot
     }
     
     func load() {
