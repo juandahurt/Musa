@@ -36,6 +36,14 @@ class Renderer {
         camera.translation.y += point.y
     }
     
+    func scaleCamera(by scale: CGFloat) {
+        camera.scale *= scale
+    }
+    
+    func pivotCamera(to pivot: CGPoint) {
+        camera.pivot = pivot
+    }
+    
     func load() {
         let library = try? device.makeDefaultLibrary(bundle: .module)
         let vertex = library?.makeFunction(name: "vertex_shader")
