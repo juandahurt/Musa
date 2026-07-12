@@ -11,6 +11,10 @@ extension CanvasView {
         let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(onPinch(_:)))
         pinchGesture.delegate = self
         addGestureRecognizer(pinchGesture)
+        
+        let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(onRotation(_:)))
+        rotationGesture.delegate = self
+        addGestureRecognizer(rotationGesture)
     }
     
     // MARK: Translation
@@ -27,6 +31,14 @@ extension CanvasView {
         let location = pinchGestureRecognizer.location(in: self)
         renderer.zoom(by: pinchGestureRecognizer.scale, around: location)
         pinchGestureRecognizer.scale = 1
+    }
+    
+    // MARK: Rotation
+    @objc
+    func onRotation(_ rotationGestureRecognizer: UIRotationGestureRecognizer) {
+        let location = rotationGestureRecognizer.location(in: self)
+        renderer.rotate(by: rotationGestureRecognizer.rotation, around: location)
+        rotationGestureRecognizer.rotation = 0
     }
 }
 
