@@ -10,12 +10,12 @@ class Renderer {
     let commandQueue: MTLCommandQueue?
     
     var pipeline: MTLRenderPipelineState?
-   
-    var touches: [Touch] = []
     
     var canvasTexture: MTLTexture?
     let canvasSize: CGSize = .init(width: 250, height: 400)
-    let camera: Camera
+    var camera: Camera
+    
+    var layer: CAMetalLayer?
     
     init(device: MTLDevice) {
         self.device = device
@@ -31,8 +31,9 @@ class Renderer {
         load()
     }
     
-    func pushTouch(_ touch: Touch) {
-        touches.append(touch)
+    func moveCamera(by point: CGPoint) {
+        camera.translation.x += point.x
+        camera.translation.y += point.y
     }
     
     func load() {
@@ -67,6 +68,18 @@ class Renderer {
         canvasTexture = device.makeTexture(descriptor: textureDescriptor)
         
         fillCanvasTexture()
+        
+        setupLoop()
+    }
+    
+    func setupLoop() {
+        let link = CADisplayLink(target: self, selector: #selector(step))
+        link.add(to: .main, forMode: .common)
+    }
+    
+    @objc
+    func step() {
+       display()
     }
     
     func fillCanvasTexture() {
@@ -80,8 +93,9 @@ class Renderer {
         commandBuffer?.commit()
     }
     
-    func display(_ layer: CAMetalLayer) {
+    private func display() {
         print("display")
+        guard let layer else { return }
         guard let drawable = layer.nextDrawable() else { return }
         guard let pipeline else { return }
         
@@ -115,14 +129,9 @@ class Renderer {
             bytes: indices,
             length: MemoryLayout<UInt16>.stride * indices.count
         )
-        
-        var modelMatrix = CGAffineTransform
-            .identity
-//                .translatedBy(x: touch.position.x, y: touch.position.y)
-//                .scaledBy(x: 500, y: 500)
-            .simd
+        var viewMatrix = camera.viewMatrix
         encoder?.setVertexBytes(
-            &modelMatrix,
+            &viewMatrix,
             length: MemoryLayout<simd_float4x4>.stride,
             index: 1
         )

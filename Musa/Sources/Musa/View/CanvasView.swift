@@ -30,6 +30,10 @@ public class CanvasView: UIView {
         metalLayer.device = device
         metalLayer.pixelFormat = .rgba8Unorm
         metalLayer.needsDisplayOnBoundsChange = true
+       
+        renderer.layer = metalLayer
+        
+        setupGestures()
     }
     
     required init?(coder: NSCoder) {
@@ -38,6 +42,6 @@ public class CanvasView: UIView {
     
     public override func layoutSubviews() {
         // TODO: update the transforms
-        renderer.display(metalLayer)
+        // TODO: call set needs display on renderer
     }
 }
