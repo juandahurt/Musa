@@ -1,5 +1,6 @@
 public enum FeatureFlag: String, CaseIterable {
     case coalescedTouches = "Use coealesced touches"
+    case cameraMovement = "Allow camera movement gestures"
 }
 
 public class FeatureFlagsManager {
@@ -10,6 +11,7 @@ public class FeatureFlagsManager {
     
     init() {
         set(.coalescedTouches, value: false)
+        set(.cameraMovement, value: true)
     }
     
     public func set(_ featureFlag: FeatureFlag, value: Bool) {

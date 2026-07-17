@@ -6,6 +6,7 @@ struct ContentView: View {
 
     var body: some View {
         CanvasWrapper()
+//            .frame(width: UIScreen.main.bounds.height, height: UIScreen.main.bounds.height)
             .ignoresSafeArea()
             .overlay(alignment: .topLeading) {
                 DebugPanel(title: "Feature Flags") {

@@ -1,8 +1,12 @@
+import CoreGraphics
 import simd
 
-// TODO: add rotation when device is rotated
+// TODO: update rotation when device is rotated
 struct Camera {
     var squareSize: Float
+    var translation: CGPoint = .zero
+    var scale: CGFloat = 1
+    var rotation: CGFloat = 0
 }
 
 
@@ -12,6 +16,10 @@ extension Camera {
     }
     
     var viewMatrix: simd_float4x4 {
-        matrix_identity_float4x4
+        CGAffineTransform.identity
+            .translatedBy(x: translation.x, y: translation.y)
+            .rotated(by: rotation)
+            .scaledBy(x: scale, y: scale)
+            .simd
     }
 }
