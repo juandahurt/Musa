@@ -10,7 +10,9 @@ import UIKit
 /// yourView.add(canvas)
 /// ```
 public class CanvasView: UIView {
-    var state: CanvasState
+    lazy var state: CanvasState = {
+        CanvasState(viewSize: layer.bounds.size)
+    }()
     let renderer: Renderer
     
     override public class var layerClass: AnyClass {
@@ -26,7 +28,6 @@ public class CanvasView: UIView {
             fatalError("GPU not available")
         }
         renderer = Renderer(device: device)
-        state = CanvasState()
         super.init(frame: .zero)
         
         metalLayer.device = device
@@ -36,6 +37,7 @@ public class CanvasView: UIView {
         renderer.layer = metalLayer
         
         setupGestures()
+        setupLoop()
     }
     
     required init?(coder: NSCoder) {
@@ -58,6 +60,6 @@ extension CanvasView {
     
     @objc
     func tick() {
-        
+        renderer.execute(passes: state.renderPasses, in: metalLayer)
     }
 }

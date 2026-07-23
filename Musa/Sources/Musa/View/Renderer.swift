@@ -64,82 +64,125 @@ class Renderer {
     }
     
     // TODO: add commands
-    private func execute(layer: CAMetalLayer) {
+    func execute(passes: [RenderPass], in layer: CAMetalLayer) {
         print("display")
         guard let drawable = layer.nextDrawable() else { return }
-        guard let pipeline else { return }
+        guard let commandBuffer = commandQueue?.makeCommandBuffer() else { return }
         
-        let commandBuffer = commandQueue?.makeCommandBuffer()
-       
-        let descriptor = MTLRenderPassDescriptor()
-        descriptor.colorAttachments[0].clearColor = .init(red: 0.78, green: 0.78, blue: 0.78, alpha: 1)
-        descriptor.colorAttachments[0].texture = drawable.texture
-        descriptor.colorAttachments[0].loadAction = .clear
-        descriptor.colorAttachments[0].storeAction = .store
+        for pass in passes {
+            // TODO: we need to have a pipeline per render pass
+            guard let pipeline else { return }
+            
+            let descriptor = MTLRenderPassDescriptor()
+            descriptor.colorAttachments[0].clearColor = .init(red: 0.78, green: 0.78, blue: 0.78, alpha: 1)
+            descriptor.colorAttachments[0].texture = drawable.texture // TODO: use pass texture
+            descriptor.colorAttachments[0].loadAction = .clear
+            descriptor.colorAttachments[0].storeAction = .store
+            let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
+            // TODO: find a better way to check if we need to pass fragment textures, maybe another command?
+            encoder?.setFragmentTexture(canvasTexture, index: 0)
+            // TODO: probaly we need a pipeline per pass
+            encoder?.setRenderPipelineState(pipeline)
+            for command in pass.commands {
+                switch command {
+                case .setViewMatrix(var viewMatrix):
+                    encoder?.setVertexBytes(
+                        &viewMatrix,
+                        length: MemoryLayout<simd_float4x4>.stride,
+                        index: 1
+                    )
+                case .setProjectionMatrix(var projectionMatrix):
+                    encoder?.setVertexBytes(
+                        &projectionMatrix,
+                        length: MemoryLayout<simd_float4x4>.stride,
+                        index: 2
+                    )
+                case .drawQuad(vertices: let vertices, indices: let indices):
+                    let vertexBuffer = device.makeBuffer(bytes: vertices, length: MemoryLayout<Vertex>.stride * vertices.count)
+                    encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+                    let indexBuffer = device.makeBuffer(
+                        bytes: indices,
+                        length: MemoryLayout<UInt16>.stride * indices.count
+                    )
+                    encoder?.drawIndexedPrimitives(
+                        type: .triangle,
+                        indexCount: indices.count,
+                        indexType: .uint16,
+                        indexBuffer: indexBuffer!,
+                        indexBufferOffset: 0
+                    )
+                }
+            }
+            encoder?.endEncoding()
+        }
         
-        let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
         
-        let cx = state.camera.center.x, cy = state.camera.center.y
-        let hw = Float(state.canvasSize.width  / 2)
-        let hh = Float(state.canvasSize.height / 2)
-        let vertices: [Vertex] = [
-            .init(position: [cx - hw, cy - hh, 0, 1], uv: [0, 0]), // top-left
-            .init(position: [cx + hw, cy - hh, 0, 1], uv: [1, 0]), // top-right
-            .init(position: [cx - hw, cy + hh, 0, 1], uv: [0, 1]), // bottom-left
-            .init(position: [cx + hw, cy + hh, 0, 1], uv: [1, 1]), // bottom-right
-        ]
-        let vertexBuffer = device.makeBuffer(bytes: vertices, length: MemoryLayout<Vertex>.stride * vertices.count)
-        encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-        
-        let indices: [UInt16] = [
-            0, 1, 2,
-            1, 2, 3
-        ]
-        let indexBuffer = device.makeBuffer(
-            bytes: indices,
-            length: MemoryLayout<UInt16>.stride * indices.count
-        )
-        var viewMatrix = state.camera.viewMatrix
-        encoder?.setVertexBytes(
-            &viewMatrix,
-            length: MemoryLayout<simd_float4x4>.stride,
-            index: 1
-        )
-
-        let vw = layer.bounds.width, vh = layer.bounds.height
-        let c = state.camera.center
-        let rect = CGRect(
-            x: CGFloat(c.x) - vw/2,
-            y: CGFloat(c.y) - vh/2,
-            width: vw,
-            height: vh
-        )
-        var projectionMatrix = float4x4(
-            ortho: rect,
-            near: 0,
-            far: 1
-        )
-        encoder?.setVertexBytes(
-            &projectionMatrix,
-            length: MemoryLayout<simd_float4x4>.stride,
-            index: 2
-        )
-        
-        encoder?.setFragmentTexture(canvasTexture, index: 0)
-        
-        encoder?.setRenderPipelineState(pipeline)
-        encoder?.drawIndexedPrimitives(
-            type: .triangle,
-            indexCount: indices.count,
-            indexType: .uint16,
-            indexBuffer: indexBuffer!,
-            indexBufferOffset: 0
-        )
-        
-        encoder?.endEncoding()
-        
-        commandBuffer?.present(drawable)
-        commandBuffer?.commit()
+        commandBuffer.present(drawable)
+        commandBuffer.commit()
+//
+//        let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
+//        
+//        let cx = state.camera.center.x, cy = state.camera.center.y
+//        let hw = Float(state.canvasSize.width  / 2)
+//        let hh = Float(state.canvasSize.height / 2)
+//        let vertices: [Vertex] = [
+//            .init(position: [cx - hw, cy - hh, 0, 1], uv: [0, 0]), // top-left
+//            .init(position: [cx + hw, cy - hh, 0, 1], uv: [1, 0]), // top-right
+//            .init(position: [cx - hw, cy + hh, 0, 1], uv: [0, 1]), // bottom-left
+//            .init(position: [cx + hw, cy + hh, 0, 1], uv: [1, 1]), // bottom-right
+//        ]
+//        let vertexBuffer = device.makeBuffer(bytes: vertices, length: MemoryLayout<Vertex>.stride * vertices.count)
+//        encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
+//        
+//        let indices: [UInt16] = [
+//            0, 1, 2,
+//            1, 2, 3
+//        ]
+//        let indexBuffer = device.makeBuffer(
+//            bytes: indices,
+//            length: MemoryLayout<UInt16>.stride * indices.count
+//        )
+//        var viewMatrix = state.camera.viewMatrix
+//        encoder?.setVertexBytes(
+//            &viewMatrix,
+//            length: MemoryLayout<simd_float4x4>.stride,
+//            index: 1
+//        )
+//
+//        let vw = layer.bounds.width, vh = layer.bounds.height
+//        let c = state.camera.center
+//        let rect = CGRect(
+//            x: CGFloat(c.x) - vw/2,
+//            y: CGFloat(c.y) - vh/2,
+//            width: vw,
+//            height: vh
+//        )
+//        var projectionMatrix = float4x4(
+//            ortho: rect,
+//            near: 0,
+//            far: 1
+//        )
+//        encoder?.setVertexBytes(
+//            &projectionMatrix,
+//            length: MemoryLayout<simd_float4x4>.stride,
+//            index: 2
+//        )
+//        
+//        encoder?.setFragmentTexture(canvasTexture, index: 0)
+//        
+//        encoder?.setRenderPipelineState(pipeline)
+//        encoder?.drawIndexedPrimitives(
+//            type: .triangle,
+//            indexCount: indices.count,
+//            indexType: .uint16,
+//            indexBuffer: indexBuffer!,
+//            indexBufferOffset: 0
+//        )
+//        
+//        encoder?.endEncoding()
+//        
+//        commandBuffer?.present(drawable)
+//        commandBuffer?.commit()
     }
 }
 
