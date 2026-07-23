@@ -23,7 +23,7 @@ extension CanvasView {
         guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
         
         let translation = panGestureRecognizer.translation(in: self)
-        renderer.moveCamera(by: translation)
+        state.camera.translate(by: translation)
         panGestureRecognizer.setTranslation(.zero, in: self)
     }
     
@@ -33,7 +33,7 @@ extension CanvasView {
         guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
         
         let location = pinchGestureRecognizer.location(in: self)
-        renderer.zoom(by: pinchGestureRecognizer.scale, around: location)
+        state.camera.zoom(by: pinchGestureRecognizer.scale, around: location, in: bounds)
         pinchGestureRecognizer.scale = 1
     }
     
@@ -43,7 +43,7 @@ extension CanvasView {
         guard FeatureFlagsManager.shared.isEnabled(.cameraMovement) else { return }
         
         let location = rotationGestureRecognizer.location(in: self)
-        renderer.rotate(by: rotationGestureRecognizer.rotation, around: location)
+        state.camera.rotate(by: rotationGestureRecognizer.rotation, around: location, in: bounds)
         rotationGestureRecognizer.rotation = 0
     }
 }

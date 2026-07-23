@@ -8,61 +8,14 @@ struct Touch {
 class Renderer {
     let device: MTLDevice
     let commandQueue: MTLCommandQueue?
-    
     var pipeline: MTLRenderPipelineState?
-    
     var canvasTexture: MTLTexture?
-    let canvasSize: CGSize = .init(width: 250, height: 400)
-    var camera: Camera
-    
     var layer: CAMetalLayer?
     
     init(device: MTLDevice) {
         self.device = device
         self.commandQueue = device.makeCommandQueue()
-        self.camera = .init(
-            squareSize: Float(
-                max(
-                    canvasSize.width,
-                    canvasSize.height
-                )
-            )
-        )
         load()
-    }
-    
-    func moveCamera(by point: CGPoint) {
-        camera.translation.x += point.x
-        camera.translation.y += point.y
-    }
-    
-    func zoom(by scale: CGFloat, around screenPoint: CGPoint) {
-        guard let layer else { return }
-
-        // to world coordinates
-        let fx = CGFloat(camera.center.x) - layer.bounds.width / 2 + screenPoint.x
-        let fy = CGFloat(camera.center.y) - layer.bounds.height / 2 + screenPoint.y
-
-        camera.translation.x = scale * camera.translation.x + (1 - scale) * fx
-        camera.translation.y = scale * camera.translation.y + (1 - scale) * fy
-        camera.scale *= scale
-    }
-    
-    func rotate(by beta: CGFloat, around screenPoint: CGPoint) {
-        guard let layer else { return }
-        
-        // world coordinates
-        let fx = CGFloat(camera.center.x) - layer.bounds.width  / 2 + screenPoint.x
-        let fy = CGFloat(camera.center.y) - layer.bounds.height / 2 + screenPoint.y
-        
-        let dx = camera.translation.x - fx
-        let dy = camera.translation.y - fy
-        
-        let c = cos(beta), s = sin(beta)
-        camera.translation.x = fx + (c * dx - s * dy)
-        camera.translation.y = fy + (s * dx + c * dy)
-        
-        camera.rotation += beta
     }
     
     func load() {
@@ -91,24 +44,12 @@ class Renderer {
         }
         
         let textureDescriptor = MTLTextureDescriptor()
-        textureDescriptor.width = Int(canvasSize.width)
-        textureDescriptor.height = Int(canvasSize.height)
+//        textureDescriptor.width = Int(state.canvasSize.width)
+//        textureDescriptor.height = Int(state.canvasSize.height)
         textureDescriptor.usage = [.renderTarget, .shaderRead]
         canvasTexture = device.makeTexture(descriptor: textureDescriptor)
         
         fillCanvasTexture()
-        
-        setupLoop()
-    }
-    
-    func setupLoop() {
-        let link = CADisplayLink(target: self, selector: #selector(step))
-        link.add(to: .main, forMode: .common)
-    }
-    
-    @objc
-    func step() {
-       display()
     }
     
     func fillCanvasTexture() {
@@ -122,9 +63,9 @@ class Renderer {
         commandBuffer?.commit()
     }
     
-    private func display() {
+    // TODO: add commands
+    private func execute(layer: CAMetalLayer) {
         print("display")
-        guard let layer else { return }
         guard let drawable = layer.nextDrawable() else { return }
         guard let pipeline else { return }
         
@@ -138,9 +79,9 @@ class Renderer {
         
         let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
         
-        let cx = camera.center.x, cy = camera.center.y
-        let hw = Float(canvasSize.width  / 2)
-        let hh = Float(canvasSize.height / 2)
+        let cx = state.camera.center.x, cy = state.camera.center.y
+        let hw = Float(state.canvasSize.width  / 2)
+        let hh = Float(state.canvasSize.height / 2)
         let vertices: [Vertex] = [
             .init(position: [cx - hw, cy - hh, 0, 1], uv: [0, 0]), // top-left
             .init(position: [cx + hw, cy - hh, 0, 1], uv: [1, 0]), // top-right
@@ -158,7 +99,7 @@ class Renderer {
             bytes: indices,
             length: MemoryLayout<UInt16>.stride * indices.count
         )
-        var viewMatrix = camera.viewMatrix
+        var viewMatrix = state.camera.viewMatrix
         encoder?.setVertexBytes(
             &viewMatrix,
             length: MemoryLayout<simd_float4x4>.stride,
@@ -166,7 +107,7 @@ class Renderer {
         )
 
         let vw = layer.bounds.width, vh = layer.bounds.height
-        let c = camera.center
+        let c = state.camera.center
         let rect = CGRect(
             x: CGFloat(c.x) - vw/2,
             y: CGFloat(c.y) - vh/2,
