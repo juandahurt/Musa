@@ -10,6 +10,9 @@ import UIKit
 /// yourView.add(canvas)
 /// ```
 public class CanvasView: UIView {
+    lazy var state: CanvasState = {
+        CanvasState(viewSize: layer.bounds.size)
+    }()
     let renderer: Renderer
     
     override public class var layerClass: AnyClass {
@@ -34,6 +37,7 @@ public class CanvasView: UIView {
         renderer.layer = metalLayer
         
         setupGestures()
+        setupLoop()
     }
     
     required init?(coder: NSCoder) {
@@ -43,5 +47,19 @@ public class CanvasView: UIView {
     public override func layoutSubviews() {
         // TODO: update the transforms
         // TODO: call set needs display on renderer
+    }
+}
+
+
+// MARK: Loop
+extension CanvasView {
+    func setupLoop() {
+        let link = CADisplayLink(target: self, selector: #selector(tick))
+        link.add(to: .main, forMode: .common)
+    }
+    
+    @objc
+    func tick() {
+        renderer.execute(passes: state.renderPasses, in: metalLayer)
     }
 }
