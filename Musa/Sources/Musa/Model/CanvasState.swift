@@ -7,6 +7,10 @@ struct CanvasState {
     var camera: Camera
     var touches: [Touch] = []
     
+    /// This just indicates if we have filled the canvas texture
+    /// with a white solid color
+    var hasLoadedTheCanvasTexture = false
+    
     init(viewSize: CGSize) {
         self.viewSize = viewSize
         self.camera = .init(
@@ -23,6 +27,17 @@ struct CanvasState {
 
 extension CanvasState {
     var renderPasses: [RenderPass] {
+        var passes: [RenderPass] = []
+        if !hasLoadedTheCanvasTexture {
+            passes.append(
+                .init(
+                    target: .texture,
+                    clearColor: .white,
+                    commands: []
+                )
+            )
+        }
+        
         // canvas draw params
         let cx = camera.center.x, cy = camera.center.y
         let hw = Float(canvasSize.width / 2)
@@ -37,7 +52,6 @@ extension CanvasState {
             0, 1, 2,
             1, 2, 3
         ]
-        
         let vw = viewSize.width, vh = viewSize.height
         let c = camera.center
         let rect = CGRect(
@@ -51,16 +65,17 @@ extension CanvasState {
             near: 0,
             far: 1
         )
+        let canvasDrawPass = RenderPass(
+            target: .screen,
+            clearColor: .init(r: 0.78, g: 0.78, b: 0.78, a: 1),
+            commands: [
+                .setViewMatrix(camera.viewMatrix),
+                .setProjectionMatrix(projectionMatrix),
+                .drawQuad(vertices: vertices, indices: indices)
+            ]
+        )
+        passes.append(canvasDrawPass)
         
-        return [
-            .init(
-                target: .screen,
-                commands: [
-                    .setViewMatrix(camera.viewMatrix),
-                    .setProjectionMatrix(projectionMatrix),
-                    .drawQuad(vertices: vertices, indices: indices)
-                ]
-            )
-        ]
+        return passes
     }
 }

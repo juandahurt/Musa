@@ -48,19 +48,6 @@ class Renderer {
 //        textureDescriptor.height = Int(state.canvasSize.height)
         textureDescriptor.usage = [.renderTarget, .shaderRead]
         canvasTexture = device.makeTexture(descriptor: textureDescriptor)
-        
-        fillCanvasTexture()
-    }
-    
-    func fillCanvasTexture() {
-        let commandBuffer = commandQueue?.makeCommandBuffer()
-        let renderDescriptor = MTLRenderPassDescriptor()
-        renderDescriptor.colorAttachments[0].texture = canvasTexture
-        renderDescriptor.colorAttachments[0].loadAction = .clear
-        renderDescriptor.colorAttachments[0].clearColor = .init(red: 1, green: 1, blue: 1, alpha: 1)
-        let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: renderDescriptor)
-        encoder?.endEncoding()
-        commandBuffer?.commit()
     }
     
     // TODO: add commands
@@ -74,8 +61,15 @@ class Renderer {
             guard let pipeline else { return }
             
             let descriptor = MTLRenderPassDescriptor()
-            descriptor.colorAttachments[0].clearColor = .init(red: 0.78, green: 0.78, blue: 0.78, alpha: 1)
-            descriptor.colorAttachments[0].texture = drawable.texture // TODO: use pass texture
+            if let clearColor = pass.clearColor {
+                descriptor.colorAttachments[0].clearColor = clearColor.mtlClearColor
+            }
+            if case .texture = pass.target {
+                descriptor.colorAttachments[0].texture = canvasTexture
+            }
+            if case .screen = pass.target {
+                descriptor.colorAttachments[0].texture = drawable.texture
+            }
             descriptor.colorAttachments[0].loadAction = .clear
             descriptor.colorAttachments[0].storeAction = .store
             let encoder = commandBuffer.makeRenderCommandEncoder(descriptor: descriptor)
@@ -116,73 +110,8 @@ class Renderer {
             encoder?.endEncoding()
         }
         
-        
         commandBuffer.present(drawable)
         commandBuffer.commit()
-//
-//        let encoder = commandBuffer?.makeRenderCommandEncoder(descriptor: descriptor)
-//        
-//        let cx = state.camera.center.x, cy = state.camera.center.y
-//        let hw = Float(state.canvasSize.width  / 2)
-//        let hh = Float(state.canvasSize.height / 2)
-//        let vertices: [Vertex] = [
-//            .init(position: [cx - hw, cy - hh, 0, 1], uv: [0, 0]), // top-left
-//            .init(position: [cx + hw, cy - hh, 0, 1], uv: [1, 0]), // top-right
-//            .init(position: [cx - hw, cy + hh, 0, 1], uv: [0, 1]), // bottom-left
-//            .init(position: [cx + hw, cy + hh, 0, 1], uv: [1, 1]), // bottom-right
-//        ]
-//        let vertexBuffer = device.makeBuffer(bytes: vertices, length: MemoryLayout<Vertex>.stride * vertices.count)
-//        encoder?.setVertexBuffer(vertexBuffer, offset: 0, index: 0)
-//        
-//        let indices: [UInt16] = [
-//            0, 1, 2,
-//            1, 2, 3
-//        ]
-//        let indexBuffer = device.makeBuffer(
-//            bytes: indices,
-//            length: MemoryLayout<UInt16>.stride * indices.count
-//        )
-//        var viewMatrix = state.camera.viewMatrix
-//        encoder?.setVertexBytes(
-//            &viewMatrix,
-//            length: MemoryLayout<simd_float4x4>.stride,
-//            index: 1
-//        )
-//
-//        let vw = layer.bounds.width, vh = layer.bounds.height
-//        let c = state.camera.center
-//        let rect = CGRect(
-//            x: CGFloat(c.x) - vw/2,
-//            y: CGFloat(c.y) - vh/2,
-//            width: vw,
-//            height: vh
-//        )
-//        var projectionMatrix = float4x4(
-//            ortho: rect,
-//            near: 0,
-//            far: 1
-//        )
-//        encoder?.setVertexBytes(
-//            &projectionMatrix,
-//            length: MemoryLayout<simd_float4x4>.stride,
-//            index: 2
-//        )
-//        
-//        encoder?.setFragmentTexture(canvasTexture, index: 0)
-//        
-//        encoder?.setRenderPipelineState(pipeline)
-//        encoder?.drawIndexedPrimitives(
-//            type: .triangle,
-//            indexCount: indices.count,
-//            indexType: .uint16,
-//            indexBuffer: indexBuffer!,
-//            indexBufferOffset: 0
-//        )
-//        
-//        encoder?.endEncoding()
-//        
-//        commandBuffer?.present(drawable)
-//        commandBuffer?.commit()
     }
 }
 
