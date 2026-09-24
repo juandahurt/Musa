@@ -13,9 +13,15 @@
 
 @implementation ViewController
 
+- (instancetype)init
+{
+    self = [super initWithNibName:nil bundle:nil];
+    return self;
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
-    // Do any additional setup after loading the view.
+    [self.view setBackgroundColor:UIColor.blueColor];
 }
 
 
